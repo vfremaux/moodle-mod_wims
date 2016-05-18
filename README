@@ -1,0 +1,92 @@
+This plugin allows one to insert WIMS classes in Moodle classes.
+It requires a WIMS server to have been setup and correctly configured.
+Information regarding extended configuration for the WIMS server required for this plugin to work can be found below:
+
+
+
+------------------------
+WIMS Configuration files
+------------------------
+
+A set of configuration files need to be setup on the wims server to enable connections from Moodle
+
+The configuration files belong in the directory:
+    .../wims/log/classes/.connections/
+
+The files are called:
+    moodle
+    moodlehttps
+    moodlejson
+    moodlejsonhttps
+
+In the template below one needs to specify a number of parameters by hand including:
+    ident_site => which must include the ip address that the Moodle server connects from
+    ident_password => which should be a real password and will need to be provided as a parameter to the moodle plugin
+
+
+The files are identical except for the following differences:
+
+moodle
+------
+ident_protocol=http
+ident_type=wims
+
+moodlehttps
+-----------
+ident_protocol=https
+ident_type=wims
+
+moodlejson
+----------
+ident_protocol=http
+ident_type=json
+
+moodlejsonhttps
+---------------
+ident_protocol=https
+ident_type=json
+
+
+Configuration file template
+---------------------------
+
+# ---------------------------------------------------------------------------------
+# The following is a template for the file: .../wims/log/classes/.connections/moodle
+# ---------------------------------------------------------------------------------
+# This is an example of identification file for connection to another
+# platform. It is used for platform authentification.
+# If you copy this file to another one in the same directory, 
+# and modify the definitions, you get another platform identification
+# whose name is the name of that file.
+
+# calling the same WIMS server.
+
+# For security reasons, it is highly recommended that you only accept
+# localhost connections. Accept several sites, but no wildcard.
+ident_site=127.0.0.1 192.168.0.1 192.168.0.9
+
+# Short description
+ident_desc=Moodle Dev Wims Intances
+
+# User agent of the connecting platform must identify itself as such.
+ident_agent=Moodle
+
+# http or https
+ident_protocol=http
+
+# password must be a word composed of alpha-numeric characters.
+# This identification is disabled by the * in the password definition.
+ident_password=password
+
+# type of remote platform.
+# available types: wims, json.
+ident_type=wims
+
+# The address and identifier/password pair for calling back.
+back_url=http://localhost/wims/wims.cgi
+back_ident=myself
+back_password=ABCD123
+
+# allowed or disabled requests. At most one of the two should be active.
+ident_allow=
+ident_deny=deluser delclass

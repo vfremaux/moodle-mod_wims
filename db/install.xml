@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="mod/wims/db" VERSION="20151013" COMMENT="XMLDB file for wims module"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="wims" COMMENT="each record is one wims resource">
+      <FIELDS>
+      	<!-- Fields REQUIRED by MOODLE -->
+	
+	<!-- primary key for the table -->
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+	<!-- id of the course that the module instance was instantiated in -->
+        <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+	<!-- module instance name -->
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+
+
+      	<!-- Fields to cache course creator info incase course is instantiated late in WIMS -->
+        <FIELD NAME="userinstitution" TYPE="char" LENGTH="127" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userfirstname" TYPE="char" LENGTH="63" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userlastname" TYPE="char" LENGTH="63" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="username" TYPE="char" LENGTH="127" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="useremail" TYPE="char" LENGTH="127" NOTNULL="true" SEQUENCE="false"/>
+
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="course" UNIQUE="false" FIELDS="course"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>
