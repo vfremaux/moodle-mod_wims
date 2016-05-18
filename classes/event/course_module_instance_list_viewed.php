@@ -15,25 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * mod_flashcard course module instance list viewed event.
+ * event defintion for wims event
  *
- * @package    mod_tracker
- * @author Valery Fremaux
- * @copyright  2014 MyLearningFactory (http://www.mylearningfactory.com)
+ * @copyright  2015 Edunao SAS (contact@edunao.com)
+ * @author     Sadge (daniel@edunao.com)
+ * @package    mod_wims
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_tracker\event;
-defined('MOODLE_INTERNAL') || die();
+// event definition for mod_wims\event\course_module_instance_list_viewed
 
-/**
- * mod_flashcard course module instance list event class.
- *
- * @package    mod_tracker
- * @since      Moodle 2.7
- * @copyright  2013 onwards Ankit Agarwal
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+namespace mod_wims\event;
+
+// the following line is not needed as the file produces no output
+// defined('MOODLE_INTERNAL') || die();
+
 class course_module_instance_list_viewed extends \core\event\course_module_instance_list_viewed {
 }
-

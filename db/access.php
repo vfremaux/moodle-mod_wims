@@ -1,189 +1,46 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
 //
-// Capability definitions for the tracker module.
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
-// The capabilities are loaded into the database table when the module is
-// installed or updated. Whenever the capability definitions are updated,
-// the module version number should be bumped up.
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// The system has four possible values for a capability:
-// CAP_ALLOW, CAP_PREVENT, CAP_PROHIBIT, and inherit (not set).
-//
-//
-// CAPABILITY NAMING CONVENTION
-//
-// It is important that capability names are unique. The naming convention
-// for capabilities that are specific to modules and blocks is as follows:
-//   [mod/block]/<component_name>:<capabilityname>
-//
-// component_name should be the same as the directory name of the mod or block.
-//
-// Core moodle capabilities are defined thus:
-//    moodle/<capabilityclass>:<capabilityname>
-//
-// Examples: mod/forum:viewpost
-//           block/recent_activity:view
-//           moodle/site:deleteuser
-//
-// The variable name for the capability definitions array follows the format
-//   $<componenttype>_<component_name>_capabilities
-//
-// For the core capabilities, the variable is $moodle_capabilities.
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Capability definitions for the wims module.
+ *
+ * @copyright  2015 Edunao SAS (contact@edunao.com)
+ * @author     Sadge (daniel@edunao.com)
+ * @package    mod_wims
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
+// add capability definitions here
 $capabilities = array(
-
-    'mod/tracker:addinstance' => array(
+    'mod/wims:view' => array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
+        'archetypes' => array(
+            'guest' => CAP_ALLOW,
+            'user' => CAP_ALLOW,
+        )
+    ),
+    'mod/wims:addinstance' => array(
+        'riskbitmask' => RISK_XSS,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COURSE,
+        'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
             'manager' => CAP_ALLOW
-        )
+        ),
+        'clonepermissionsfrom' => 'moodle/course:manageactivities'
     ),
-
-    'mod/tracker:seeissues' => array(
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
-            'student' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
-    ),
-
-    'mod/tracker:viewallissues' => array(
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
-            'manager' => CAP_ALLOW
-        )
-    ),
-
-    'mod/tracker:manage' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
-    ),
-
-    'mod/tracker:managepriority' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
-    ),
-
-    'mod/tracker:viewpriority' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
-            'student' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
-    ),
-
-    'mod/tracker:managewatches' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
-    ),
-
-    'mod/tracker:canbecced' => array(
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
-            'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
-    ),
-
-    'mod/tracker:resolve' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
-            'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
-    ),
-
-    'mod/tracker:report' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
-            'student' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
-    ),
-
-    'mod/tracker:develop' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
-            'student' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
-    ),
-
-    'mod/tracker:comment' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
-            'student' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
-    ),
-
-    'mod/tracker:configure' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
-            'manager' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-        )
-    ),
-
-    'mod/tracker:viewreports' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
-            'manager' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-        )
-    ),
-
-    'mod/tracker:configurenetwork' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
-            'manager' => CAP_ALLOW,
-        )
-    ),
-
-    'mod/tracker:shareelements' => array(
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
-            'manager' => CAP_ALLOW,
-        )
-    ),
-
 );

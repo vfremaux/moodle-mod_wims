@@ -15,272 +15,100 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package mod-tracker
- * @category mod
- * @author Clifford Tham, Valery Fremaux from Moodle 1.8 ahead
- * @copyright  2007 MyLearningFactory (http://www.mylearningfactory.com)
- * @date 02/12/2007
+ * Display wims course elements
  *
- * This page prints a particular instance of a tracker and handles
- * top level interactions
+ * @copyright  2015 Edunao SAS (contact@edunao.com)
+ * @author     Sadge (daniel@edunao.com)
+ * @package    mod_wims
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+// This is view.php - add all view routines here (for generating output for author, instructor & student)
+
+
+///////////////////////////////////////////////////////////////////////////
+// includes
 
 require('../../config.php');
-require_once($CFG->dirroot."/mod/tracker/lib.php");
-require_once($CFG->dirroot."/mod/tracker/locallib.php");
+require_once(dirname(__FILE__).'/wimsinterface.class.php');
+require_once($CFG->libdir . '/completionlib.php');
 
-// Check for required parameters.
 
-$id = optional_param('id', 0, PARAM_INT); // Course Module ID
-$a  = optional_param('a', 0, PARAM_INT);  // Tracker instance ID.
-$issueid = optional_param('issueid', '', PARAM_INT);  // Ticket number.
-$action = optional_param('what', '', PARAM_ALPHA);
+///////////////////////////////////////////////////////////////////////////
+// _GET / _POST parameters
 
-if ($id) {
-    if (! $cm = get_coursemodule_from_id('tracker', $id)) {
-        print_error('errorcoursemodid', 'tracker');
-    }
-    if (! $course = $DB->get_record('course', array('id' => $cm->course))) {
-        print_error('errorcoursemisconfigured', 'tracker');
-    }
-    if (! $tracker = $DB->get_record('tracker', array('id' => $cm->instance))) {
-        print_error('errormoduleincorrect', 'tracker');
-    }
-} else {
-    if (! $tracker = $DB->get_record('tracker', array('id' => $a))) {
-        print_error('errormoduleincorrect', 'tracker');
-    }
-    if (! $course = $DB->get_record('course', array('id' => $tracker->course))) {
-        print_error('errorcoursemisconfigured', 'tracker');
-    }
-    if (! $cm = get_coursemodule_from_instance("tracker", $tracker->id, $course->id)) {
-        print_error('errorcoursemodid', 'tracker');
-    }
-}
+$id         = optional_param('id', 0, PARAM_INT);                     // Course module ID
+$urltype    = optional_param('wimspage', WIMS_HOME_PAGE, PARAM_INT);  // type of page to view in wims
+$urlarg     = optional_param('wimsidx', null, PARAM_INT);             // Index of the page to view
 
-$screen = tracker_resolve_screen($tracker, $cm);
-$view = tracker_resolve_view($tracker, $cm);
 
-$url = new moodle_url('/mod/tracker/view.php', array('id' => $cm->id, 'view' => $view, 'screen' => $screen));
+///////////////////////////////////////////////////////////////////////////
+// Data from moodle
 
-// Redirect (before outputting) traps.
-if ($view == "view" && (empty($screen) || $screen == 'viewanissue' || $screen == 'editanissue') && empty($issueid)) {
-    redirect(new moodle_url('/mod/tracker/view.php', array('id' => $cm->id, 'view' => 'view', 'screen' => 'browse')));
-}
-if ($view == 'reportanissue') {
-    redirect(new moodle_url('/mod/tracker/reportissue.php', array('id'=> $id)));
-}
+$cm = get_coursemodule_from_id('wims', $id, 0, false, MUST_EXIST);
+$instance = $DB->get_record('wims', array('id'=>$cm->instance), '*', MUST_EXIST);
+$course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
+$config = get_config('wims');
 
-// Implicit routing.
 
-if ($issueid) {
-    $view = 'view';
-    if (empty($screen)) {
-        $screen = 'viewanissue';
-    }
-}
+///////////////////////////////////////////////////////////////////////////
+// Sanity tests
 
-// Security.
-
-require_course_login($course->id, true, $cm);
-
+require_course_login($course, true, $cm);
 $context = context_module::instance($cm->id);
+require_capability('mod/wims:view', $context);
 
-// Trigger module viewed event.
-$eventparams = array(
-    'objectid' => $tracker->id,
+
+///////////////////////////////////////////////////////////////////////////
+// Moodle event logging & state update
+
+$params = array(
     'context' => $context,
+    'objectid' => $instance->id
 );
-
-// require_once($CFG->dirroot.'/mod/tracker/classes/event/course_module_viewed.php');
-$event = \mod_tracker\event\course_module_viewed::create($eventparams);
-$event->add_record_snapshot('tracker', $tracker);
+$event = \mod_wims\event\course_module_viewed::create($params);
+$event->add_record_snapshot('course_modules', $cm);
+$event->add_record_snapshot('course', $course);
+$event->add_record_snapshot('wims', $instance);
 $event->trigger();
 
-tracker_loadpreferences($tracker->id, $USER->id);
 
-// Search controller - special implementation.
-// TODO : consider incorporing this controller back into standard MVC
+///////////////////////////////////////////////////////////////////////////
+// Work Code
 
-if ($action == 'searchforissues') {
-    $search = optional_param('search', null, PARAM_CLEANHTML);
-    $saveasreport = optional_param('saveasreport', null, PARAM_CLEANHTML);
-
-    // Search for issues.
-    if (!empty($search)) {
-        tracker_searchforissues($tracker, $cm->id);
-    } elseif (!empty ($saveasreport)) {
-        // Save search as a report.
-        tracker_saveasreport($tracker->id);
+function raisewimserror($mainmsg,$errormsgs){
+    echo "<h1>".$mainmsg."</h1>";
+    foreach ($errormsgs as $msg){
+        echo "&gt; $msg<br/>";
     }
-} elseif ($action == 'viewreport') {
-    tracker_viewreport($tracker->id);
-} elseif ($action == 'clearsearch') {
-    if (tracker_clearsearchcookies($tracker->id)) {
-        $returnview = ($tracker->supportmode == 'bugtracker') ? 'browse' : 'mytickets';
-        redirect("view.php?id={$cm->id}&amp;view=view&amp;screen={$returnview}");
-    }
+    die();
 }
 
-$strtrackers = get_string('modulenameplural', 'tracker');
-$strtracker  = get_string('modulename', 'tracker');
 
-if ($view == 'reports') {
-    require_once($CFG->dirroot.'/mod/tracker/js/jqplotlib.php');
-    tracker_require_jqplot_libs();
+///////////////////////////////////////////////////////////////////////////
+// Render the output - by executing a redirect to WIMS
+
+$PAGE->set_url('/mod/wims/view.php', array('id' => $cm->id));
+
+// instantiate a wims interface
+$wims=new wims_interface($config,$config->debugviewpage);
+
+// start by connecting to the course on the WIMS server (and instantiate the course if required)
+$wimsresult=$wims->selectclassformodule($course,$cm,$config);
+($wimsresult==true)||raisewimserror("WIMS Course Select FAILED",$wims->errormsgs);
+
+// if we're a teacher then we need the supervisor url otherwise we need the student url
+$sitelang=current_language();
+$isteacher=has_capability('moodle/course:manageactivities', $context);
+if ($isteacher){
+    $url=$wims->getteacherurl($sitelang,$urltype,$urlarg);
+}else{
+    $url=$wims->getstudenturl($USER,$sitelang,$urltype,$urlarg);
 }
 
-$PAGE->set_context($context);
-$PAGE->set_title(format_string($tracker->name));
-$PAGE->set_heading(format_string($tracker->name));
-$PAGE->set_url($url);
-$PAGE->set_button($OUTPUT->update_module_button($cm->id, 'tracker'));
+// if we've failed to get hold of a plausible url then bomb out with an error message
+($url!=null)||raisewimserror("WIMS User Authentication FAILED",$wims->errormsgs);
 
-if ($screen == 'print') {
-    $PAGE->set_pagelayout('embedded');
-}
+// do the redirection
+redirect($url);
 
-echo $OUTPUT->header();
-
-echo $OUTPUT->box_start('', 'tracker-view');
-
-include($CFG->dirroot.'/mod/tracker/menus.php');
-
-/*
- * Print the main part of the page
- *
- * routing to appropriate view against situation
- */
-
-if ($view == 'view') {
-    $result = 0 ;
-    if ($action != '') {
-        $result = include($CFG->dirroot.'/mod/tracker/views/view.controller.php');
-    }
-    if ($result != -1) {
-        switch ($screen) {
-            case 'mytickets':
-                $resolved = 0;
-                include "views/viewmyticketslist.php";
-                break;
-            case 'mywork':
-                $resolved = 0;
-                include($CFG->dirroot.'/mod/tracker/views/viewmyassignedticketslist.php');
-                break;
-            case 'browse':
-                if (!has_capability('mod/tracker:viewallissues', $context)) {
-                    print_error ('errornoaccessallissues', 'tracker');
-                } else {
-                    $resolved = 0;
-                    include "views/viewissuelist.php";
-                }
-                break;
-            case 'search':
-                include($CFG->dirroot.'/mod/tracker/views/searchform.html');
-                break;
-            case 'viewanissue' :
-                // If user it trying to view an issue, check to see if user has privileges to view this issue
-                if (!has_any_capability(array('mod/tracker:seeissues','mod/tracker:resolve','mod/tracker:develop','mod/tracker:manage'), $context)) {
-                    print_error('errornoaccessissue', 'tracker');
-                } else {
-                    include "views/viewanissue.html";
-                }
-                break;
-            case 'editanissue' :
-                if (!has_capability('mod/tracker:manage', $context)) {
-                    print_error('errornoaccessissue', 'tracker');
-                } else {
-                    include "views/editanissue.html";
-                }
-                break;
-        }
-    }
-} elseif ($view == 'resolved') {
-    $result = 0 ;
-    if ($action != '') {
-        $result = include 'views/view.controller.php';
-    }
-    if ($result != -1) {
-        switch ($screen) {
-            case 'mytickets':
-                $resolved = 1;
-                include 'views/viewmyticketslist.php';
-                break;
-
-            case 'mywork':
-                $resolved = 1;
-                include 'views/viewmyassignedticketslist.php';
-                break;
-
-            case 'browse':
-                if (!has_capability('mod/tracker:viewallissues', $context)) {
-                    print_error('errornoaccessallissues', 'tracker');
-                } else {
-                    $resolved = 1;
-                    include 'views/viewissuelist.php';
-                }
-                break;
-        }
-    }
-} elseif ($view == 'reports') {
-    $result = 0;
-    if ($result != -1) {
-        switch ($screen) {
-            case 'status':
-                include "report/status.html";
-                break;
-            case 'evolution':
-                include "report/evolution.html";
-                break;
-            case 'print':
-                include "report/print.html";
-                break;
-        }
-    }
-} elseif ($view == 'admin') {
-    $result = 0;
-    if ($action != '') {
-        $result = include "views/admin.controller.php";
-    }
-    if ($result != -1) {
-        switch ($screen) {
-            case 'summary':
-                include "views/admin_summary.html";
-                break;
-            case 'manageelements':
-                include "views/admin_manageelements.html";
-                break;
-            case 'managenetwork':
-                include "views/admin_mnetwork.html";
-                break;
-        }
-    }
-} elseif ($view == 'profile') {
-    $result = 0;
-
-    if ($action != '') {
-        $result = include 'views/profile.controller.php';
-    }
-
-    if ($result != -1) {
-        switch ($screen) {
-            case 'myprofile' :
-                include 'views/profile.html';
-                break;
-            case 'mypreferences' :
-                include 'views/mypreferences.html';
-                break;
-            case 'mywatches' :
-                include 'views/mywatches.html';
-                break;
-            case 'myqueries':
-                include 'views/myqueries.html';
-                break;
-        }
-    }
-} else {
-    print_error('errorfindingaction', 'tracker', $action);
-}
-
-echo $OUTPUT->box_end();
-echo $OUTPUT->footer();

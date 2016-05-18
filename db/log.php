@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * event defintion for wims event
+ * Definition of log events for module wims
  *
  * @copyright  2015 Edunao SAS (contact@edunao.com)
  * @author     Sadge (daniel@edunao.com)
@@ -23,12 +23,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// event definition for mod_wims\event\course_module_viewed
-namespace mod_wims\event;
-class course_module_viewed extends \core\event\course_module_viewed {
-    protected function init() {
-        $this->data['objecttable'] = 'wims';
-        $this->data['crud'] = 'r';
-        $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
-    }
-}
+
+// add log event defintins here
+$logs = array(
+    array('module'=>'wims', 'action'=>'view', 'mtable'=>'wims', 'field'=>'name'),
+    array('module'=>'wims', 'action'=>'view all', 'mtable'=>'wims', 'field'=>'name'),
+);
+

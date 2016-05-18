@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -15,20 +16,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * event defintion for wims event
+ * Post installation and migration code.
  *
  * @copyright  2015 Edunao SAS (contact@edunao.com)
  * @author     Sadge (daniel@edunao.com)
  * @package    mod_wims
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ *
+ * This file replaces:
+ *   - STATEMENTS section in db/install.xml
+ *   - lib.php/modulename_install() post installation hook
+ *   - partially defaults.php
  */
 
-// event definition for mod_wims\event\course_module_viewed
-namespace mod_wims\event;
-class course_module_viewed extends \core\event\course_module_viewed {
-    protected function init() {
-        $this->data['objecttable'] = 'wims';
-        $this->data['crud'] = 'r';
-        $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
-    }
+function xmldb_wims_install() {
 }
